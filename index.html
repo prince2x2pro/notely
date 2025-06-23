@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notely - Simple Notes App</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* (Full CSS is the same as your earlier version — include your CSS styles here or let me know to paste them again) */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .app-bar {
+      background-color: #6200ee;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      font-size: 20px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .notes-container {
+      padding: 80px 16px 100px;
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .note-card {
+      background-color: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .note-title {
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .note-content {
+      color: #555;
+      flex-grow: 1;
+      margin-bottom: 8px;
+    }
+
+    .note-date {
+      font-size: 12px;
+      color: #aaa;
+      text-align: right;
+    }
+
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #6200ee;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+      cursor: pointer;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0,0,0,0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 8px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #6200ee;
+      color: white;
+    }
+
+    .btn-secondary {
+      background-color: #eee;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <header class="app-bar">
+    <span class="material-icons">notes</span>
+    <span style="margin-left: 8px;">Notely</span>
+  </header>
+
+  <div class="notes-container" id="notes-container">
+    <div class="empty-state" id="empty-state">
+      <p>No notes yet</p>
+    </div>
+  </div>
+
+  <div class="fab" id="add-note-button">
+    <span class="material-icons">add</span>
+  </div>
+
+  <!-- Note Modal -->
+  <div class="modal" id="note-modal">
+    <div class="modal-content">
+      <h2 id="modal-title">New Note</h2>
+      <input type="text" id="note-title" class="form-control" placeholder="Title"/>
+      <textarea id="note-content" class="form-control" rows="5" placeholder="Note content"></textarea>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-note">Cancel</button>
+        <button class="btn btn-primary" id="save-note">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const addNoteBtn = document.getElementById("add-note-button");
+    const modal = document.getElementById("note-modal");
+    const saveBtn = document.getElementById("save-note");
+    const cancelBtn = document.getElementById("cancel-note");
+    const noteTitleInput = document.getElementById("note-title");
+    const noteContentInput = document.getElementById("note-content");
+    const notesContainer = document.getElementById("notes-container");
+    const emptyState = document.getElementById("empty-state");
+
+    let notes = JSON.parse(localStorage.getItem("notes") || "[]");
+
+    function renderNotes() {
+      notesContainer.innerHTML = "";
+      if (notes.length === 0) {
+        notesContainer.appendChild(emptyState);
+        return;
+      }
+      notes.forEach(note => {
+        const card = document.createElement("div");
+        card.className = "note-card";
+        card.innerHTML = `
+          <h3 class="note-title">${note.title}</h3>
+          <p class="note-content">${note.content}</p>
+          <span class="note-date">${new Date(note.date).toLocaleDateString()}</span>
+        `;
+        notesContainer.appendChild(card);
+      });
+    }
+
+    function openModal() {
+      modal.style.display = "flex";
+      noteTitleInput.value = "";
+      noteContentInput.value = "";
+    }
+
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    addNoteBtn.addEventListener("click", openModal);
+    cancelBtn.addEventListener("click", closeModal);
+
+    saveBtn.addEventListener("click", () => {
+      const title = noteTitleInput.value.trim();
+      const content = noteContentInput.value.trim();
+      if (!title && !content) {
+        alert("Please enter a note");
+        return;
+      }
+      notes.unshift({ title, content, date: new Date().toISOString() });
+      localStorage.setItem("notes", JSON.stringify(notes));
+      renderNotes();
+      closeModal();
+    });
+
+    window.addEventListener("click", e => {
+      if (e.target === modal) closeModal();
+    });
+
+    renderNotes();
+  </script>
+</body>
+</html>
